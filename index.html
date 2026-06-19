@@ -96,7 +96,15 @@ body.resizing .app,body.resizing .sticky{transition:none}
 .card{border-radius:20px;padding:26px 28px;background:var(--surface);border:1px solid var(--border);margin-bottom:22px;box-shadow:var(--shadow)}
 .card h3{margin:0 0 4px;font-size:clamp(18px,2.2vw,22px);line-height:1.2}
 .card .subtitle{margin:0 0 18px;font-size:13.5px;color:var(--muted);font-weight:500}
-.card .text{white-space:pre-wrap;font-size:15px;line-height:1.7;color:var(--text-strong)}
+.card .text{font-size:15px;line-height:1.7;color:var(--text-strong)}
+.card .text .rt-p{margin:0 0 14px}
+.card .text .rt-h{font-size:17px;font-weight:700;color:var(--text);margin:24px 0 10px}
+.card .text .rt-h:first-child{margin-top:0}
+.card .text .rt-phase{font-size:16px;color:var(--primary);margin-top:22px}
+.card .text .rt-label{font-weight:600;color:var(--text);margin:0 0 6px}
+.card .text .rt-list{margin:0 0 16px;padding-left:24px;display:grid;gap:6px}
+.card .text .rt-list li{margin:0}
+.card .text .rt-quote{margin:0 0 14px;padding:10px 16px;border-left:3px solid var(--primary);background:var(--surface2);border-radius:0 10px 10px 0;color:var(--text-strong)}
 
 .mc{margin-top:24px;padding-top:22px;border-top:1px solid var(--border)}
 .mc-head{font-size:12px;text-transform:uppercase;letter-spacing:.07em;font-weight:700;color:var(--primary);margin-bottom:16px}
@@ -178,11 +186,6 @@ body.resizing .app,body.resizing .sticky{transition:none}
       </button>
     </div>
     <div class="content">
-      <div class="hero">
-        <div class="eyebrow">Preview</div>
-        <h2>Abhandlung lesen, danach Inhalte pruefen.</h2>
-        <p>Jeder Abschnitt enthaelt den Originaltext der Reflexion und darunter drei Multiple-Choice-Fragen, die das Verstaendnis der Inhalte testen. Beantworte alle Fragen, um den Abschnitt abzuschliessen.</p>
-      </div>
       <div id="sections"></div>
     </div>
   </main>
@@ -239,7 +242,7 @@ sectionsData.forEach((s, idx) => {
     '<div class="card">'
     + '<h3>' + escapeHtml(s.title) + '</h3>'
     + '<p class="subtitle">' + escapeHtml(s.subtitle) + '</p>'
-    + '<div class="text">' + escapeHtml(s.text) + '</div>'
+    + '<div class="text">' + formatText(s.text) + '</div>'
     + '<div class="mc"><div class="mc-head">Verstaendnis pruefen - 3 Fragen</div>' + qHtml + '</div>'
     + '<div class="actions">'
     + '<span class="q-status" data-status="' + idx + '">0 / 3 Fragen beantwortet</span>'
@@ -339,6 +342,86 @@ function escapeHtml(str) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+// Render the reflexion text with structure (headings, bullet lists, spacing)
+// WITHOUT changing any character of the original wording.
+function formatText(raw) {
+  const lines = String(raw).split("\n").map(l => l.trim()).filter(l => l.length > 0);
+
+  // A line is a sub-heading if it matches known structural markers,
+  // or is a short label-like line without sentence-ending punctuation.
+  const headingRe = /^(Phase\s+\d+|Punkt\s+\d+\s*:|Hinweis\s+\d+\s*:|Fragen\s+zu[mr]\b.*|Fragen\s+zur\b.*)/i;
+  const knownHeadings = [
+    "Technische Vorbereitung",
+    "Gespraechsfuehrung", "Gespr\u00e4chsf\u00fchrung",
+    "Tonalitaet und Wortwahl", "Tonalit\u00e4t und Wortwahl",
+    "Eine hybride Loesung", "Eine hybride L\u00f6sung",
+    "Der Zusammenhang zwischen Teamaufbau und Auslastung",
+    "Die systematische Uebertragung seiner Verkaufsfaehigkeit",
+    "Die systematische \u00dcbertragung seiner Verkaufsf\u00e4higkeit",
+    "Der regionale Fokus als Vorteil"
+  ];
+
+  // Inline label markers that introduce a quote/example on the next line(s).
+  const labelRe = /^(Besser|Beispiel|Danach|Konter|Frage|Lead|Einstieg|Mogliche Konsequenz|M\u00f6gliche Konsequenz|Passende Formulierung|Passende Frage|Passende Trennung|Passende Antwort|Notwendige Frage|Alternativ mit staerkerer Einwandtrennung|Alternativ mit st\u00e4rkerer Einwandtrennung|Anschliessend|Anschlie\u00dfend|Bei Zustimmung|Abschlussfrage zur Einwandtrennung|Wenn grundsaetzlich interessant|Wenn grunds\u00e4tzlich interessant)\s*:?$/;
+
+  function isHeading(l){
+    if (headingRe.test(l)) return true;
+    if (knownHeadings.indexOf(l) !== -1) return true;
+    return false;
+  }
+  function isBulletItem(l){
+    if (/^[a-z]\)\s/.test(l)) return true;          // a) b) c)
+    if (l.endsWith(",")) return true;               // comma-terminated list line
+    return false;
+  }
+  function isQuote(l){ return /^[\u201e\u201c\"]/.test(l); }
+
+  let html = "";
+  let i = 0;
+  let listBuf = [];
+  function flushList(){
+    if (listBuf.length){
+      html += "<ul class=\"rt-list\">" + listBuf.map(x => "<li>" + escapeHtml(x) + "</li>").join("") + "</ul>";
+      listBuf = [];
+    }
+  }
+
+  while (i < lines.length) {
+    const l = lines[i];
+    if (isHeading(l)) {
+      flushList();
+      // Phase headings get a slightly larger style; others are standard sub-headings
+      const cls = /^Phase\s+\d+/i.test(l) ? "rt-h rt-phase" : "rt-h";
+      html += "<p class=\"" + cls + "\">" + escapeHtml(l) + "</p>";
+      i++; continue;
+    }
+    if (isBulletItem(l)) {
+      listBuf.push(l);
+      i++; continue;
+    }
+    // Closing item of a comma-list: a short line ending in '.' right after bullets,
+    // with no internal sentence punctuation (treated as the final list entry).
+    if (listBuf.length && /[.;]$/.test(l) && !/[.!?]\s/.test(l) && l.split(" ").length <= 6) {
+      listBuf.push(l);
+      flushList();
+      i++; continue;
+    }
+    flushList();
+    if (labelRe.test(l)) {
+      html += "<p class=\"rt-label\">" + escapeHtml(l) + "</p>";
+      i++; continue;
+    }
+    if (isQuote(l)) {
+      html += "<blockquote class=\"rt-quote\">" + escapeHtml(l) + "</blockquote>";
+      i++; continue;
+    }
+    html += "<p class=\"rt-p\">" + escapeHtml(l) + "</p>";
+    i++;
+  }
+  flushList();
+  return html;
 }
 
 renderSection(0);
