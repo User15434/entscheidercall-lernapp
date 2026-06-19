@@ -162,7 +162,7 @@ body.resizing .app,body.resizing .sticky{transition:none}
         <p>Reflexion mit 10 Abschnitten</p>
       </div>
     </div>
-    <div class="tag">Statische Vorschau</div>
+    <div class="tag">Reflexion (Christian.Hempfling.Media)</div>
     <nav class="nav" id="nav" aria-label="Lektionsnavigation"></nav>
     <div class="progress">
       <strong>Fortschritt</strong>
@@ -171,7 +171,7 @@ body.resizing .app,body.resizing .sticky{transition:none}
     </div>
   </aside>
 
-  <div class="resizer" id="resizer" role="separator" aria-orientation="vertical" aria-label="Sidebar-Breite anpassen" title="Ziehen, um die Sidebar-Breite anzupassen (Doppelklick: zuruecksetzen)" tabindex="0"><span class="grip"></span></div>
+  <div class="resizer" id="resizer" role="separator" aria-orientation="vertical" aria-label="Sidebar-Breite anpassen" title="Ziehen, um die Sidebar-Breite anzupassen (Doppelklick: zurücksetzen)" tabindex="0"><span class="grip"></span></div>
 
   <main class="main">
     <div class="topbar">
@@ -191,10 +191,10 @@ body.resizing .app,body.resizing .sticky{transition:none}
   </main>
 
   <div class="sticky">
-    <small id="stickyHint">Mit "Naechster Abschnitt" durch die Reflexion navigieren.</small>
+    <small id="stickyHint">Mit "Nächster Abschnitt" durch die Reflexion navigieren.</small>
     <div class="nav-btns">
-      <button class="btn secondary" id="prevBtn">Zurueck</button>
-      <button class="btn primary" id="nextBtn">Naechster Abschnitt</button>
+      <button class="btn secondary" id="prevBtn">Zurück</button>
+      <button class="btn primary" id="nextBtn">Nächster Abschnitt</button>
     </div>
   </div>
 </div>
@@ -243,10 +243,10 @@ sectionsData.forEach((s, idx) => {
     + '<h3>' + escapeHtml(s.title) + '</h3>'
     + '<p class="subtitle">' + escapeHtml(s.subtitle) + '</p>'
     + '<div class="text">' + formatText(s.text) + '</div>'
-    + '<div class="mc"><div class="mc-head">Verstaendnis pruefen - 3 Fragen</div>' + qHtml + '</div>'
+    + '<div class="mc"><div class="mc-head">Verständnis prüfen - 3 Fragen</div>' + qHtml + '</div>'
     + '<div class="actions">'
     + '<span class="q-status" data-status="' + idx + '">0 / 3 Fragen beantwortet</span>'
-    + '<button class="btn primary complete-btn" data-step="' + idx + '" disabled>Abschnitt abschliessen</button>'
+    + '<button class="btn primary complete-btn" data-step="' + idx + '" disabled>Abschnitt abschließen</button>'
     + '</div></div>';
   sectionsEl.appendChild(section);
 });
@@ -275,7 +275,7 @@ document.querySelectorAll(".question").forEach((qEl) => {
       const isCorrect = idx === correct;
       feedback.textContent = isCorrect
         ? "Richtig - das entspricht der Abhandlung."
-        : "Nicht ganz - die gruen markierte Antwort passt zur Abhandlung.";
+        : "Nicht ganz - die grün markierte Antwort passt zur Abhandlung.";
       feedback.className = "feedback show " + (isCorrect ? "good" : "bad");
       qEl.dataset.done = "1";
       answeredCount[sIdx]++;
@@ -314,7 +314,7 @@ function renderSection(index) {
   sectionNodes.forEach((sec, i) => sec.classList.toggle("active", i === currentIndex));
   navButtons.forEach((btn, i) => btn.classList.toggle("active", i === currentIndex));
   prevBtn.disabled = currentIndex === 0;
-  nextBtn.textContent = currentIndex === sectionNodes.length - 1 ? "Zum Anfang" : "Naechster Abschnitt";
+  nextBtn.textContent = currentIndex === sectionNodes.length - 1 ? "Zum Anfang" : "Nächster Abschnitt";
   stickyHint.textContent = "Abschnitt " + (currentIndex + 1) + " von " + sectionNodes.length;
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
