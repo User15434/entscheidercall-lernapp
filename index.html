@@ -13,14 +13,24 @@
   --text:#26231d; --muted:#6f6c64; --primary:#01696f; --primary-dark:#0c4e54;
   --success:#3f7a25; --success-bg:#e7f1e1; --error:#a02b6e; --error-bg:#f7e3ef;
   --shadow:0 1px 2px rgba(32,27,19,.05),0 8px 24px rgba(32,27,19,.06);
+  --sidebar-w:280px;
 }
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.65}
-.app{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+.app{display:grid;grid-template-columns:var(--sidebar-w) 1fr;min-height:100vh}
+body.resizing{cursor:col-resize;user-select:none}
+body.resizing iframe{pointer-events:none}
+
+/* Resizer handle */
+.resizer{position:fixed;top:0;left:var(--sidebar-w);width:10px;height:100vh;transform:translateX(-5px);cursor:col-resize;z-index:20;display:flex;align-items:center;justify-content:center;touch-action:none}
+.resizer::before{content:"";position:absolute;top:0;bottom:0;left:5px;width:1px;background:var(--border);transition:background .15s,width .15s}
+.resizer:hover::before,.resizer.active::before{width:3px;left:4px;background:var(--primary)}
+.resizer .grip{position:relative;width:6px;height:46px;border-radius:999px;background:var(--border);transition:background .15s}
+.resizer:hover .grip,.resizer.active .grip{background:var(--primary)}
 
 /* Sidebar */
-.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:24px 20px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:24px 20px;position:sticky;top:0;height:100vh;overflow-y:auto;overflow-x:hidden}
 .brand{display:flex;align-items:center;gap:12px;margin-bottom:8px}
 .logo{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--primary),#4db3b4);display:grid;place-items:center;color:#fff;font-weight:800;font-size:16px;letter-spacing:.02em}
 .brand h1{font-size:17px;margin:0;line-height:1.15}
@@ -86,7 +96,7 @@ body{margin:0;font-family:'Inter',system-ui,-apple-system,sans-serif;background:
 .final .big{font-size:42px;font-weight:800;color:var(--primary);margin:6px 0}
 
 /* Sticky footer nav */
-.sticky{position:fixed;left:280px;right:0;bottom:0;border-top:1px solid var(--border);background:rgba(247,246,242,.92);backdrop-filter:blur(10px);display:flex;justify-content:space-between;align-items:center;padding:13px 28px;gap:14px;z-index:5}
+.sticky{position:fixed;left:var(--sidebar-w);right:0;bottom:0;border-top:1px solid var(--border);background:rgba(247,246,242,.92);backdrop-filter:blur(10px);display:flex;justify-content:space-between;align-items:center;padding:13px 28px;gap:14px;z-index:5}
 .sticky small{color:var(--muted);font-size:13px}
 .sticky .nav-btns{display:flex;gap:10px}
 
@@ -97,6 +107,7 @@ body{margin:0;font-family:'Inter',system-ui,-apple-system,sans-serif;background:
   .main{padding-bottom:130px}
   .sticky{left:0;flex-direction:column;align-items:stretch}
   .sticky .nav-btns{justify-content:space-between}
+  .resizer{display:none}
 }
 </style>
 </head>
@@ -118,6 +129,8 @@ body{margin:0;font-family:'Inter',system-ui,-apple-system,sans-serif;background:
       <div id="progressLabel">0 / 10 Abschnitte abgeschlossen</div>
     </div>
   </aside>
+
+  <div class="resizer" id="resizer" role="separator" aria-orientation="vertical" aria-label="Sidebar-Breite anpassen" title="Ziehen, um die Sidebar-Breite anzupassen (Doppelklick: zuruecksetzen)" tabindex="0"><span class="grip"></span></div>
 
   <main class="main">
     <div class="hero">
@@ -286,6 +299,75 @@ function escapeHtml(str) {
 
 renderSection(0);
 updateProgress();
+
+/* Sidebar resizer */
+(function(){
+  const MIN = 200, MAX = 480, DEFAULT = 280;
+  const resizer = document.getElementById("resizer");
+  const root = document.documentElement;
+  if (!resizer) return;
+
+  function applyWidth(px){
+    const w = Math.max(MIN, Math.min(MAX, px));
+    root.style.setProperty("--sidebar-w", w + "px");
+    return w;
+  }
+
+  // restore saved width
+  try {
+    const saved = parseInt(localStorage.getItem("lernapp_sidebar_w"), 10);
+    if (!isNaN(saved)) applyWidth(saved);
+  } catch(e){}
+
+  let dragging = false;
+
+  function onMove(clientX){
+    if (!dragging) return;
+    applyWidth(clientX);
+  }
+  function start(e){
+    dragging = true;
+    resizer.classList.add("active");
+    document.body.classList.add("resizing");
+    e.preventDefault();
+  }
+  function end(){
+    if (!dragging) return;
+    dragging = false;
+    resizer.classList.remove("active");
+    document.body.classList.remove("resizing");
+    try {
+      const cur = parseInt(getComputedStyle(root).getPropertyValue("--sidebar-w"), 10);
+      if (!isNaN(cur)) localStorage.setItem("lernapp_sidebar_w", cur);
+    } catch(e){}
+  }
+
+  resizer.addEventListener("mousedown", start);
+  window.addEventListener("mousemove", (e) => onMove(e.clientX));
+  window.addEventListener("mouseup", end);
+
+  resizer.addEventListener("touchstart", start, {passive:false});
+  window.addEventListener("touchmove", (e) => { if(dragging && e.touches[0]) onMove(e.touches[0].clientX); }, {passive:false});
+  window.addEventListener("touchend", end);
+
+  // keyboard support
+  resizer.addEventListener("keydown", (e) => {
+    const cur = parseInt(getComputedStyle(root).getPropertyValue("--sidebar-w"), 10) || DEFAULT;
+    let next = cur;
+    if (e.key === "ArrowLeft") next = cur - 16;
+    else if (e.key === "ArrowRight") next = cur + 16;
+    else return;
+    e.preventDefault();
+    const w = applyWidth(next);
+    try { localStorage.setItem("lernapp_sidebar_w", w); } catch(err){}
+  });
+
+  // double-click to reset
+  resizer.addEventListener("dblclick", () => {
+    applyWidth(DEFAULT);
+    try { localStorage.setItem("lernapp_sidebar_w", DEFAULT); } catch(e){}
+  });
+})();
 </script>
 </body>
 </html>
