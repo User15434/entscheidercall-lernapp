@@ -12,15 +12,47 @@
   --bg:#f7f6f2; --surface:#fffdf9; --surface2:#f3efe7; --border:#d9d3c7;
   --text:#26231d; --muted:#6f6c64; --primary:#01696f; --primary-dark:#0c4e54;
   --success:#3f7a25; --success-bg:#e7f1e1; --error:#a02b6e; --error-bg:#f7e3ef;
+  --choice-bg:#fbfaf6; --selected-bg:#e7f1f0; --tag-bg:#d8ebe9; --bar-bg:#e0d9cd;
+  --text-strong:#332f27; --good-text:#27521c; --bad-text:#7a2148;
+  --sticky-bg:rgba(247,246,242,.92); --primary-disabled:#b9c6c5;
   --shadow:0 1px 2px rgba(32,27,19,.05),0 8px 24px rgba(32,27,19,.06);
   --sidebar-w:280px;
 }
+[data-theme="dark"]{
+  --bg:#16151a; --surface:#1e1d24; --surface2:#27262f; --border:#36343f;
+  --text:#e7e5ea; --muted:#a4a1ac; --primary:#3fb6bd; --primary-dark:#2f9aa1;
+  --success:#6fb554; --success-bg:#22301d; --error:#d76aa8; --error-bg:#321f2b;
+  --choice-bg:#26252e; --selected-bg:#1f3537; --tag-bg:#1e3a3c; --bar-bg:#34323d;
+  --text-strong:#e7e5ea; --good-text:#a9d99a; --bad-text:#eaa6cd;
+  --sticky-bg:rgba(22,21,26,.92); --primary-disabled:#3a4546;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+}
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.65}
-.app{display:grid;grid-template-columns:var(--sidebar-w) 1fr;min-height:100vh}
+body{margin:0;font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.65;transition:background .25s,color .25s}
+.app{display:grid;grid-template-columns:var(--sidebar-w) 1fr;min-height:100vh;transition:grid-template-columns .2s ease}
 body.resizing{cursor:col-resize;user-select:none}
 body.resizing iframe{pointer-events:none}
+body.resizing .app,body.resizing .sticky{transition:none}
+
+/* Collapsed sidebar */
+.app.collapsed{grid-template-columns:0 1fr}
+.app.collapsed .sidebar{transform:translateX(-100%);opacity:0;pointer-events:none}
+.app.collapsed .resizer{display:none}
+.app.collapsed .sticky{left:0}
+.sidebar{transition:transform .2s ease,opacity .2s ease}
+
+/* Topbar */
+.topbar{position:sticky;top:0;z-index:8;display:flex;align-items:center;gap:10px;padding:14px clamp(16px,3vw,40px);background:var(--sticky-bg);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.topbar .spacer{flex:1}
+.icon-btn{width:42px;height:42px;border-radius:11px;border:1px solid var(--border);background:var(--surface);color:var(--text);display:grid;place-items:center;cursor:pointer;transition:background .15s,border-color .15s}
+.icon-btn:hover{border-color:var(--primary);background:var(--surface2)}
+.icon-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.icon-btn .sun{display:none}
+[data-theme="dark"] .icon-btn .sun{display:block}
+[data-theme="dark"] .icon-btn .moon{display:none}
+.topbar-title{font-weight:700;font-size:15px;opacity:0;transition:opacity .2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app.collapsed .topbar-title{opacity:1}
 
 /* Resizer handle */
 .resizer{position:fixed;top:0;left:var(--sidebar-w);width:10px;height:100vh;transform:translateX(-5px);cursor:col-resize;z-index:20;display:flex;align-items:center;justify-content:center;touch-action:none}
@@ -35,7 +67,7 @@ body.resizing iframe{pointer-events:none}
 .logo{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--primary),#4db3b4);display:grid;place-items:center;color:#fff;font-weight:800;font-size:16px;letter-spacing:.02em}
 .brand h1{font-size:17px;margin:0;line-height:1.15}
 .brand p{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
-.tag{display:inline-flex;padding:5px 11px;border-radius:999px;background:#d8ebe9;color:var(--primary);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-top:14px}
+.tag{display:inline-flex;padding:5px 11px;border-radius:999px;background:var(--tag-bg);color:var(--primary);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-top:14px}
 .nav{margin-top:22px;display:grid;gap:5px}
 .nav button{width:100%;text-align:left;border-radius:12px;border:1px solid transparent;background:transparent;padding:11px 12px;font:inherit;cursor:pointer;display:flex;gap:12px;align-items:flex-start;color:var(--text);transition:background .15s}
 .nav button:hover{background:var(--surface2)}
@@ -46,12 +78,13 @@ body.resizing iframe{pointer-events:none}
 .nav .label{font-size:12.5px;font-weight:600;line-height:1.25}
 .progress{margin-top:24px;padding:15px;border-radius:15px;background:var(--surface2);border:1px solid var(--border);font-size:13px}
 .progress strong{font-size:13px}
-.bar{margin-top:9px;height:8px;border-radius:999px;background:#e0d9cd;overflow:hidden}
+.bar{margin-top:9px;height:8px;border-radius:999px;background:var(--bar-bg);overflow:hidden}
 .bar .fill{height:100%;width:0;background:var(--primary);border-radius:999px;transition:width .35s ease}
 #progressLabel{margin-top:8px;color:var(--muted);font-size:12.5px}
 
 /* Main */
-.main{padding:28px clamp(20px,4vw,48px) 110px;max-width:920px;width:100%;margin:0 auto}
+.main{min-width:0}
+.content{padding:28px clamp(20px,4vw,48px) 110px;max-width:920px;width:100%;margin:0 auto}
 .hero{border-radius:20px;padding:24px 26px;border:1px solid var(--border);background:var(--surface);margin-bottom:22px;box-shadow:var(--shadow)}
 .hero .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:var(--primary);margin-bottom:6px}
 .hero h2{margin:2px 0 8px;font-size:clamp(20px,2.4vw,26px);line-height:1.15}
@@ -63,7 +96,7 @@ body.resizing iframe{pointer-events:none}
 .card{border-radius:20px;padding:26px 28px;background:var(--surface);border:1px solid var(--border);margin-bottom:22px;box-shadow:var(--shadow)}
 .card h3{margin:0 0 4px;font-size:clamp(18px,2.2vw,22px);line-height:1.2}
 .card .subtitle{margin:0 0 18px;font-size:13.5px;color:var(--muted);font-weight:500}
-.card .text{white-space:pre-wrap;font-size:15px;line-height:1.7;color:#332f27}
+.card .text{white-space:pre-wrap;font-size:15px;line-height:1.7;color:var(--text-strong)}
 
 .mc{margin-top:24px;padding-top:22px;border-top:1px solid var(--border)}
 .mc-head{font-size:12px;text-transform:uppercase;letter-spacing:.07em;font-weight:700;color:var(--primary);margin-bottom:16px}
@@ -71,32 +104,32 @@ body.resizing iframe{pointer-events:none}
 .question:last-child{margin-bottom:0}
 .question h4{margin:0 0 11px;font-size:15.5px;line-height:1.4}
 .choices{display:grid;gap:9px}
-.choice{border-radius:13px;border:1px solid var(--border);background:#fbfaf6;padding:12px 14px;font:inherit;font-size:14.5px;text-align:left;cursor:pointer;color:var(--text);transition:border-color .15s,background .15s;display:flex;gap:11px;align-items:flex-start}
+.choice{border-radius:13px;border:1px solid var(--border);background:var(--choice-bg);padding:12px 14px;font:inherit;font-size:14.5px;text-align:left;cursor:pointer;color:var(--text);transition:border-color .15s,background .15s;display:flex;gap:11px;align-items:flex-start}
 .choice:hover:not(.locked){border-color:var(--primary)}
 .choice .mark{flex:none;width:22px;height:22px;border-radius:7px;border:1.5px solid var(--border);display:grid;place-items:center;font-size:12px;font-weight:700;color:transparent;margin-top:1px}
-.choice.selected{border-color:var(--primary);background:#e7f1f0}
+.choice.selected{border-color:var(--primary);background:var(--selected-bg)}
 .choice.correct{border-color:var(--success);background:var(--success-bg)}
 .choice.correct .mark{border-color:var(--success);background:var(--success);color:#fff}
 .choice.wrong{border-color:var(--error);background:var(--error-bg)}
 .choice.wrong .mark{border-color:var(--error);background:var(--error);color:#fff}
 .feedback{display:none;margin-top:11px;padding:11px 13px;border-radius:12px;font-size:13.5px}
 .feedback.show{display:block}
-.feedback.good{background:var(--success-bg);color:#27521c}
-.feedback.bad{background:var(--error-bg);color:#7a2148}
+.feedback.good{background:var(--success-bg);color:var(--good-text)}
+.feedback.bad{background:var(--error-bg);color:var(--bad-text)}
 
 .actions{display:flex;justify-content:space-between;align-items:center;margin-top:20px;gap:12px;flex-wrap:wrap}
 .q-status{font-size:13px;color:var(--muted)}
 .btn{border-radius:999px;border:none;padding:11px 20px;font:inherit;font-weight:600;cursor:pointer;font-size:14px}
 .btn.primary{background:var(--primary);color:#fff}
 .btn.primary:hover{background:var(--primary-dark)}
-.btn.primary:disabled{background:#b9c6c5;cursor:not-allowed}
+.btn.primary:disabled{background:var(--primary-disabled);cursor:not-allowed}
 .btn.secondary{background:var(--surface2);border:1px solid var(--border);color:var(--text)}
 
 .final{text-align:center;padding:14px 0}
 .final .big{font-size:42px;font-weight:800;color:var(--primary);margin:6px 0}
 
 /* Sticky footer nav */
-.sticky{position:fixed;left:var(--sidebar-w);right:0;bottom:0;border-top:1px solid var(--border);background:rgba(247,246,242,.92);backdrop-filter:blur(10px);display:flex;justify-content:space-between;align-items:center;padding:13px 28px;gap:14px;z-index:5}
+.sticky{position:fixed;left:var(--sidebar-w);right:0;bottom:0;border-top:1px solid var(--border);background:var(--sticky-bg);backdrop-filter:blur(10px);display:flex;justify-content:space-between;align-items:center;padding:13px 28px;gap:14px;z-index:5;transition:left .2s ease}
 .sticky small{color:var(--muted);font-size:13px}
 .sticky .nav-btns{display:flex;gap:10px}
 
@@ -133,12 +166,25 @@ body.resizing iframe{pointer-events:none}
   <div class="resizer" id="resizer" role="separator" aria-orientation="vertical" aria-label="Sidebar-Breite anpassen" title="Ziehen, um die Sidebar-Breite anzupassen (Doppelklick: zuruecksetzen)" tabindex="0"><span class="grip"></span></div>
 
   <main class="main">
-    <div class="hero">
-      <div class="eyebrow">Preview</div>
-      <h2>Abhandlung lesen, danach Inhalte pruefen.</h2>
-      <p>Jeder Abschnitt enthaelt den Originaltext der Reflexion und darunter drei Multiple-Choice-Fragen, die das Verstaendnis der Inhalte testen. Beantworte alle Fragen, um den Abschnitt abzuschliessen.</p>
+    <div class="topbar">
+      <button class="icon-btn" id="toggleSidebar" aria-label="Sidebar ein-/ausklappen" title="Sidebar ein-/ausklappen">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/></svg>
+      </button>
+      <span class="topbar-title">Entscheidercall Lernapp</span>
+      <div class="spacer"></div>
+      <button class="icon-btn" id="toggleTheme" aria-label="Hell-/Dunkelmodus umschalten" title="Hell-/Dunkelmodus umschalten">
+        <svg class="moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+        <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="7" y2="7"/><line x1="17" y1="17" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="7" y2="17"/><line x1="17" y1="7" x2="19.1" y2="4.9"/></svg>
+      </button>
     </div>
-    <div id="sections"></div>
+    <div class="content">
+      <div class="hero">
+        <div class="eyebrow">Preview</div>
+        <h2>Abhandlung lesen, danach Inhalte pruefen.</h2>
+        <p>Jeder Abschnitt enthaelt den Originaltext der Reflexion und darunter drei Multiple-Choice-Fragen, die das Verstaendnis der Inhalte testen. Beantworte alle Fragen, um den Abschnitt abzuschliessen.</p>
+      </div>
+      <div id="sections"></div>
+    </div>
   </main>
 
   <div class="sticky">
@@ -364,6 +410,45 @@ updateProgress();
   resizer.addEventListener("dblclick", () => {
     applyWidth(DEFAULT);
     try { localStorage.setItem("lernapp_sidebar_w", DEFAULT); } catch(e){}
+  });
+})();
+
+/* Sidebar collapse toggle */
+(function(){
+  const app = document.querySelector(".app");
+  const btn = document.getElementById("toggleSidebar");
+  if (!app || !btn) return;
+  try {
+    if (localStorage.getItem("lernapp_sidebar_collapsed") === "1") app.classList.add("collapsed");
+  } catch(e){}
+  btn.addEventListener("click", () => {
+    const collapsed = app.classList.toggle("collapsed");
+    btn.setAttribute("aria-pressed", collapsed ? "true" : "false");
+    try { localStorage.setItem("lernapp_sidebar_collapsed", collapsed ? "1" : "0"); } catch(e){}
+  });
+})();
+
+/* Dark mode toggle */
+(function(){
+  const btn = document.getElementById("toggleTheme");
+  const root = document.documentElement;
+  if (!btn) return;
+  function setTheme(t){
+    if (t === "dark") root.setAttribute("data-theme", "dark");
+    else root.removeAttribute("data-theme");
+    btn.setAttribute("aria-pressed", t === "dark" ? "true" : "false");
+  }
+  let theme = "light";
+  try {
+    const saved = localStorage.getItem("lernapp_theme");
+    if (saved === "dark" || saved === "light") theme = saved;
+    else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) theme = "dark";
+  } catch(e){}
+  setTheme(theme);
+  btn.addEventListener("click", () => {
+    theme = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    setTheme(theme);
+    try { localStorage.setItem("lernapp_theme", theme); } catch(e){}
   });
 })();
 </script>
