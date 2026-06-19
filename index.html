@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Entscheidercall Lernapp - Reflexion mit 10 Abschnitten</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f6f2; --surface:#fffdf9; --surface2:#f3efe7; --border:#d9d3c7;
+  --text:#26231d; --muted:#6f6c64; --primary:#01696f; --primary-dark:#0c4e54;
+  --success:#3f7a25; --success-bg:#e7f1e1; --error:#a02b6e; --error-bg:#f7e3ef;
+  --shadow:0 1px 2px rgba(32,27,19,.05),0 8px 24px rgba(32,27,19,.06);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.65}
+.app{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+
+/* Sidebar */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:24px 20px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.logo{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--primary),#4db3b4);display:grid;place-items:center;color:#fff;font-weight:800;font-size:16px;letter-spacing:.02em}
+.brand h1{font-size:17px;margin:0;line-height:1.15}
+.brand p{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
+.tag{display:inline-flex;padding:5px 11px;border-radius:999px;background:#d8ebe9;color:var(--primary);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-top:14px}
+.nav{margin-top:22px;display:grid;gap:5px}
+.nav button{width:100%;text-align:left;border-radius:12px;border:1px solid transparent;background:transparent;padding:11px 12px;font:inherit;cursor:pointer;display:flex;gap:12px;align-items:center;color:var(--text);transition:background .15s}
+.nav button:hover{background:var(--surface2)}
+.nav button.active{background:var(--surface2);border-color:var(--border)}
+.nav .num{flex:none;width:26px;height:26px;border-radius:8px;background:var(--surface2);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--muted)}
+.nav button.active .num{background:var(--primary);color:#fff}
+.nav button.done .num{background:var(--success);color:#fff}
+.nav .label{font-size:12.5px;font-weight:600;line-height:1.25}
+.progress{margin-top:24px;padding:15px;border-radius:15px;background:var(--surface2);border:1px solid var(--border);font-size:13px}
+.progress strong{font-size:13px}
+.bar{margin-top:9px;height:8px;border-radius:999px;background:#e0d9cd;overflow:hidden}
+.bar .fill{height:100%;width:0;background:var(--primary);border-radius:999px;transition:width .35s ease}
+#progressLabel{margin-top:8px;color:var(--muted);font-size:12.5px}
+
+/* Main */
+.main{padding:28px clamp(20px,4vw,48px) 110px;max-width:920px;width:100%;margin:0 auto}
+.hero{border-radius:20px;padding:24px 26px;border:1px solid var(--border);background:var(--surface);margin-bottom:22px;box-shadow:var(--shadow)}
+.hero .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:var(--primary);margin-bottom:6px}
+.hero h2{margin:2px 0 8px;font-size:clamp(20px,2.4vw,26px);line-height:1.15}
+.hero p{margin:0;font-size:14.5px;color:var(--muted);max-width:62ch}
+
+.section{display:none;animation:fade .35s ease}
+.section.active{display:block}
+@keyframes fade{from{opacity:.3;transform:translateY(8px)}to{opacity:1;transform:none}}
+.card{border-radius:20px;padding:26px 28px;background:var(--surface);border:1px solid var(--border);margin-bottom:22px;box-shadow:var(--shadow)}
+.card h3{margin:0 0 4px;font-size:clamp(18px,2.2vw,22px);line-height:1.2}
+.card .subtitle{margin:0 0 18px;font-size:13.5px;color:var(--muted);font-weight:500}
+.card .text{white-space:pre-wrap;font-size:15px;line-height:1.7;color:#332f27}
+
+.mc{margin-top:24px;padding-top:22px;border-top:1px solid var(--border)}
+.mc-head{font-size:12px;text-transform:uppercase;letter-spacing:.07em;font-weight:700;color:var(--primary);margin-bottom:16px}
+.question{margin-bottom:22px}
+.question:last-child{margin-bottom:0}
+.question h4{margin:0 0 11px;font-size:15.5px;line-height:1.4}
+.choices{display:grid;gap:9px}
+.choice{border-radius:13px;border:1px solid var(--border);background:#fbfaf6;padding:12px 14px;font:inherit;font-size:14.5px;text-align:left;cursor:pointer;color:var(--text);transition:border-color .15s,background .15s;display:flex;gap:11px;align-items:flex-start}
+.choice:hover:not(.locked){border-color:var(--primary)}
+.choice .mark{flex:none;width:22px;height:22px;border-radius:7px;border:1.5px solid var(--border);display:grid;place-items:center;font-size:12px;font-weight:700;color:transparent;margin-top:1px}
+.choice.selected{border-color:var(--primary);background:#e7f1f0}
+.choice.correct{border-color:var(--success);background:var(--success-bg)}
+.choice.correct .mark{border-color:var(--success);background:var(--success);color:#fff}
+.choice.wrong{border-color:var(--error);background:var(--error-bg)}
+.choice.wrong .mark{border-color:var(--error);background:var(--error);color:#fff}
+.feedback{display:none;margin-top:11px;padding:11px 13px;border-radius:12px;font-size:13.5px}
+.feedback.show{display:block}
+.feedback.good{background:var(--success-bg);color:#27521c}
+.feedback.bad{background:var(--error-bg);color:#7a2148}
+
+.actions{display:flex;justify-content:space-between;align-items:center;margin-top:20px;gap:12px;flex-wrap:wrap}
+.q-status{font-size:13px;color:var(--muted)}
+.btn{border-radius:999px;border:none;padding:11px 20px;font:inherit;font-weight:600;cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.btn.primary:hover{background:var(--primary-dark)}
+.btn.primary:disabled{background:#b9c6c5;cursor:not-allowed}
+.btn.secondary{background:var(--surface2);border:1px solid var(--border);color:var(--text)}
+
+.final{text-align:center;padding:14px 0}
+.final .big{font-size:42px;font-weight:800;color:var(--primary);margin:6px 0}
+
+/* Sticky footer nav */
+.sticky{position:fixed;left:280px;right:0;bottom:0;border-top:1px solid var(--border);background:rgba(247,246,242,.92);backdrop-filter:blur(10px);display:flex;justify-content:space-between;align-items:center;padding:13px 28px;gap:14px;z-index:5}
+.sticky small{color:var(--muted);font-size:13px}
+.sticky .nav-btns{display:flex;gap:10px}
+
+@media (max-width:920px){
+  .app{grid-template-columns:1fr}
+  .sidebar{position:relative;height:auto;border-right:none;border-bottom:1px solid var(--border)}
+  .sidebar .nav{grid-template-columns:1fr 1fr;gap:6px}
+  .main{padding-bottom:130px}
+  .sticky{left:0;flex-direction:column;align-items:stretch}
+  .sticky .nav-btns{justify-content:space-between}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">LA</div>
+      <div>
+        <h1>Entscheidercall Lernapp</h1>
+        <p>Reflexion mit 10 Abschnitten</p>
+      </div>
+    </div>
+    <div class="tag">Statische Vorschau</div>
+    <nav class="nav" id="nav" aria-label="Lektionsnavigation"></nav>
+    <div class="progress">
+      <strong>Fortschritt</strong>
+      <div class="bar"><div class="fill" id="fill"></div></div>
+      <div id="progressLabel">0 / 10 Abschnitte abgeschlossen</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="hero">
+      <div class="eyebrow">Preview</div>
+      <h2>Abhandlung lesen, danach Inhalte pruefen.</h2>
+      <p>Jeder Abschnitt enthaelt den Originaltext der Reflexion und darunter drei Multiple-Choice-Fragen, die das Verstaendnis der Inhalte testen. Beantworte alle Fragen, um den Abschnitt abzuschliessen.</p>
+    </div>
+    <div id="sections"></div>
+  </main>
+
+  <div class="sticky">
+    <small id="stickyHint">Mit "Naechster Abschnitt" durch die Reflexion navigieren.</small>
+    <div class="nav-btns">
+      <button class="btn secondary" id="prevBtn">Zurueck</button>
+      <button class="btn primary" id="nextBtn">Naechster Abschnitt</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const sectionsData = [{"title": "1. KURZDIAGNOSE", "subtitle": "Gesamtbild des Leads und des Calls", "text": "Der Lead war nicht unqualifiziert. Christian Hempfling hatte sogar ein konkretes Wachstumsthema: Er baut Mitarbeiter für Content Creation und Social-Media-Betreuung auf.\nDer Call scheiterte, weil er zu früh auf externe Terminierung und Done-for-you-Cold-Calling festgelegt wurde. Sein eigentliches Bedürfnis war jedoch, seine regionale Personenmarke zu erhalten, intern ein Team aufzubauen und die persönliche Wirkung gegenüber Kunden nicht zu verlieren.\nEs fehlten insbesondere:\neine saubere Analyse seines Status quo,\neine Quantifizierung seiner aktuellen Kundengewinnung,\neine Einwand-Vorwand-Trennung,\neine an seine Regionalität angepasste Lösung,\nein Soll-Zustand, der seinen Teamaufbau mit zukünftiger Auslastung verbindet.\nDer Lead hatte nach dem Gespräch vermutlich das Bild, dass HIPERSA als externe Firma in seinem Namen aggressive Kaltakquise betreiben möchte. Dieses Bild wurde nicht korrigiert, sondern durch Formulierungen wie „Attacke machen“ und „alles weg terminieren, was nicht bei drei auf dem Baum ist“ zusätzlich verstärkt.", "questions": [{"q": "Welches Wachstumsthema hatte Christian Hempfling laut Kurzdiagnose?", "answers": ["Er wollte deutschlandweit expandieren und neue Standorte eröffnen.", "Er baut Mitarbeiter für Content Creation und Social-Media-Betreuung auf.", "Er wollte sein Angebot komplett auf Software umstellen."], "correct": 1}, {"q": "Warum scheiterte der Call laut Kurzdiagnose vor allem?", "answers": ["Weil der Lead objektiv unqualifiziert war.", "Weil zu wenig Energie in das Gespräch gebracht wurde.", "Weil zu früh auf externe Terminierung und Done-for-you-Cold-Calling festgelegt wurde."], "correct": 2}, {"q": "Welches Bild hatte der Lead vermutlich nach dem Gespräch von HIPERSA?", "answers": ["Ein ruhiger, rein beratender Prozess ohne Outbound-Aktivitäten.", "Eine externe Firma, die aggressive Kaltakquise in seinem Namen betreibt.", "Ein kleiner regionaler Dienstleister ohne Vertriebsfokus."], "correct": 1}]}, {"title": "2. EINORDNUNG NACH DEM 7-PHASEN-MODELL", "subtitle": "Analyse der Phasen 1 bis 7", "text": "Phase 1 – Begrüßung und Einleitung in das Thema\nDie Begrüßung war freundlich und energiereich. Die Redeerlaubnis wurde mit der 30-Sekunden-Frage eingeholt.\nDie Formulierung:\n„Ich habe einen kleinen Attentat auf Sie vor.“\nwar jedoch unnötig riskant. Sie kann als Pattern Interrupt funktionieren, wirkt aber möglicherweise unseriös oder zu stark einstudiert.\nAußerdem wurde der Einstieg nicht individualisiert. Es fehlte ein konkreter Bezug zu Christian.Hempfling.Media, seiner regionalen Ausrichtung und seinen Dienstleistungen.\nBesser:\n„Herr Hempfling, Max Pilgrim von HIPERSA. Ich habe gesehen, dass Sie Unternehmen im Hofer Land bei Social Media, Content, Foto und Video unterstützen. Es geht um die Frage, wie Sie dafür regional planbar passende Kunden gewinnen. Haben Sie 30 Sekunden?“\nDamit hätte der Lead sofort verstanden, warum gerade er angerufen wird.\nPhase 2 – Vom Monolog in den Dialog kommen\nNach der Redeerlaubnis folgte ein zu breiter Monolog über:\nDone with you,\nDone for you,\nVertriebler,\nVertriebsteams,\n30 Termine im Monat.\nDas war zu viel und zu unspezifisch. Der Lead konnte nicht erkennen, welcher Teil davon konkret für ihn relevant sein sollte.\nDer Übergang in den Dialog erfolgte nur über die allgemeine Frage:\n„Inwieweit ist das ein relevantes Thema für Ihr Unternehmen?“\nBesser wäre eine konkrete Statusfrage gewesen:\n„Kommen Ihre neuen Kunden aktuell überwiegend über Ihre persönliche Bekanntheit und Empfehlungen oder gibt es dahinter bereits einen planbaren Akquiseprozess?“\nDamit wäre der Lead gedanklich aus seinem Tagesgeschäft in das konkrete Gesprächsthema geführt worden.\nPhase 3 – Den Referenzpunkt schaffen\nDiese Phase wurde praktisch übersprungen.\nEs wurde nicht ermittelt:\nwie viele Kundenanfragen aktuell monatlich entstehen,\nüber welche Kanäle diese Anfragen kommen,\nwie viele daraus zu Kunden werden,\nwie hoch der durchschnittliche Kundenwert ist,\nwie viele zusätzliche Kunden das neue Team betreuen könnte,\nwelche Angebote er besonders stark verkaufen möchte,\nwelche Branchen im Umkreis Hof und Bayreuth attraktiv sind.\nOhne einen messbaren Referenzpunkt konnte kein wirtschaftlicher Unterschied zwischen Ist- und Soll-Zustand gezeigt werden.\nAls Christian sagte, dass er aktuell Mitarbeiter für Content Creation und Social-Media-Betreuung aufbaut, hätte gefragt werden müssen:\n„Wie viele zusätzliche Kunden könnten Sie mit diesem Team künftig pro Monat betreuen?“\nAnschließend:\n„Und wie viele neue Kunden kommen aktuell durchschnittlich pro Monat dazu?“\nDamit wäre möglicherweise eine erkennbare Lücke zwischen zukünftiger Kapazität und bestehender Nachfrage entstanden.\nPhase 4 – Die These für den Soll-Zustand aufstellen\nEs wurde kein individueller Soll-Zustand aufgerissen.\nStattdessen wurde lediglich erklärt, dass HIPERSA fünf bis zehn Termine pro Woche liefern könne.\nFür einen regionalen Anbieter kann diese Zahl sogar abschreckend wirken. Möglicherweise benötigt er keine 40 Termine im Monat, sondern fünf bis acht sehr passende Gespräche.\nEin passender Soll-Zustand wäre gewesen:\n„Wenn Sie jetzt zusätzliche Kapazität für Content Creation und Betreuung aufbauen, wäre ein sinnvoller nächster Schritt, parallel einen regionalen Prozess zu etablieren, der Ihnen beispielsweise fünf bis acht passende Unternehmergespräche im Monat bringt. Dann startet das neue Team nicht ohne planbare Auslastung. Wäre das grundsätzlich ein interessantes Ziel?“\nDamit hätte Christian selbst bestätigen müssen, ob er diesen Zustand erreichen möchte.\nPhase 5 – Die Einwandbehandlung\nDas Gespräch endete inhaltlich in Phase 5.\nChristian brachte mehrere Einwände:\nVertrieb sei aktuell nicht seine Priorität.\nEr baue zuerst ein internes Team auf.\nSeine Firma sei stark auf seine Person ausgerichtet.\nFremde Verkäufer hätten Schwierigkeiten, seine Leistung zu verkaufen.\nBei regionaler Akquise müsse der Erstkontakt persönlich und authentisch wirken.\nEs komme besser an, wenn jemand direkt aus seinem Unternehmen anruft.\nDiese Einwände wurden nicht sauber getrennt und hinterfragt.\nStatt Fragen zu stellen, wurde argumentiert:\n„Wir rufen ja in Ihrem Firmennamen an.“\nDamit wurde nur die formale Absenderfrage beantwortet. Sein wirklicher Einwand betraf Vertrauen, Personenmarke, Regionalität, Tonalität und Glaubwürdigkeit.\nEine passende Einwand-Vorwand-Trennung wäre gewesen:\n„Geht es Ihnen grundsätzlich darum, dass der Erstkontakt intern erfolgen muss, oder darum, dass der potenzielle Kunde nicht merken darf, dass ein externer Dienstleister beteiligt ist?“\nAnschließend hätte eine hybride Lösung positioniert werden können.\nPhase 6 – Der Terminpitch\nDer Terminpitch kam zu früh.\nVorher waren weder ein messbarer Painpoint noch ein konkretes Ziel erarbeitet worden. Deshalb wurde der Termin lediglich als unverbindliche Produktvorstellung angeboten.\nDie Formulierung:\n„alles weg terminieren, was nicht bei drei auf dem Baum ist“\nwar besonders unpassend. Sie stand im direkten Widerspruch zu seinem Wunsch nach persönlicher, regionaler und vertrauensvoller Kommunikation.\nDer Termin hätte so gepitcht werden müssen:\n„Herr Hempfling, ich glaube, bei Ihnen wäre kein klassisches Callcenter-Modell sinnvoll. Interessant wäre eher ein regionaler Prozess, bei dem Zielkunden, Ansprache, CRM und Follow-up von uns vorbereitet werden, der Erstkontakt aber in Ihrer Tonalität oder durch Ihren eigenen Mitarbeiter erfolgt. Lassen Sie uns einmal prüfen, wie sich Ihr neues Team später planbar auslasten lässt, ohne Ihre Personenmarke zu beschädigen.“\nDamit wäre der Termin auf seine Situation zugeschnitten gewesen.\nPhase 7 – Terminfindung und Abschluss\nDiese Phase wurde nicht erreicht.\nAls Christian zum zweiten Mal sagte, dass er es aktuell nicht sehe, wurde das Gespräch beendet und ein unverbindliches Follow-up in einigen Monaten vereinbart.\nVor dem Rückzug hätte noch eine letzte Einwandtrennung erfolgen müssen:\n„Sehen Sie aktuell grundsätzlich keinen Nutzen in planbarer Kundengewinnung oder war mein Vorschlag einfach noch zu stark auf externe Telefonakquise ausgerichtet?“\nErst nach einer klaren Antwort hätte entschieden werden sollen, ob:\nein Termin sinnvoll ist,\nein konkretes Follow-up-Datum vereinbart wird,\nder Lead tatsächlich aktuell unqualifiziert ist.\nDas Gespräch endete somit in Phase 5, weil der wichtigste Einwand nicht vollständig aufgelöst wurde. Phase 6 wurde zwar formal versucht, hatte aber keine ausreichende Grundlage.", "questions": [{"q": "Welche Phase wurde laut Analyse praktisch übersprungen?", "answers": ["Phase 3 – Den Referenzpunkt schaffen.", "Phase 1 – Begrüßung und Einleitung.", "Phase 7 – Terminfindung und Abschluss."], "correct": 0}, {"q": "In welcher Phase endete das Gespräch inhaltlich laut Text?", "answers": ["Phase 2 – Vom Monolog in den Dialog.", "Phase 5 – Die Einwandbehandlung.", "Phase 6 – Der Terminpitch."], "correct": 1}, {"q": "Welches Problem hatte der Terminpitch vor allem?", "answers": ["Zu wenig Energie in der Formulierung.", "Zu viele Zahlen im Pitch.", "Es gab weder messbaren Painpoint noch konkretes Ziel, der Pitch war nur eine Produktvorstellung."], "correct": 2}]}, {"title": "3. MINDESTENS DREI KONKRETE PUNKTE, IN DENEN DER LEAD NICHT RICHTIG ABGEHOLT WURDE", "subtitle": "Fünf Punkte, in denen der Lead nicht abgeholt wurde", "text": "Punkt 1: Sein regionales Geschäftsmodell wurde nicht berücksichtigt\nChristian verkauft keine anonyme Software oder standardisierte Dienstleistung. Sein Unternehmen lebt von:\npersönlicher Bekanntheit,\nregionalem Vertrauen,\ndirektem Kundenkontakt,\nlokaler Vernetzung,\nseiner eigenen Personenmarke.\nDer allgemeine Pitch über Vertriebsteams und 30 Termine im Monat wirkte deshalb nicht passend.\nBesser wäre gewesen:\n„Bei Ihnen dürfte nicht möglichst viel Outreach entscheidend sein, sondern dass die Ansprache zur Region und zu Ihrer persönlichen Marke passt.“\nPunkt 2: Sein Teamaufbau wurde nicht als Vertriebshebel erkannt\nChristian sagte, dass er Mitarbeiter für Content Creation und Social-Media-Betreuung aufbaut.\nDarauf wurde gefragt:\n„Also Vertriebler sind da nicht erwünscht?“\nDamit wurde seine Aussage zu stark vereinfacht. Tatsächlich baut er operative Kapazität auf. Diese muss später ausgelastet werden.\nBesser:\n„Verstehe. Sie bauen also gerade die Lieferfähigkeit aus. Ist die Pipeline bereits groß genug, um diese zusätzlichen Kapazitäten später auszulasten, oder wird Kundengewinnung danach wieder ein Thema?“\nPunkt 3: Seine Personenabhängigkeit wurde nur als Problem beim Verkaufen interpretiert\nChristian sagte:\n„Wenn ich ins Gespräch gehe, verkaufe ich. Jemand anders tut sich schwer.“\nDas ist ein zentraler Painpoint. Sein Vertrieb ist stark von ihm abhängig.\nStatt diesen Punkt zu vertiefen, wurde lediglich angeboten, ihm Termine zu legen, damit er selbst weiter verkauft.\nDamit bleibt seine Abhängigkeit bestehen.\nBesser:\n„Dann ist nicht nur die Terminmenge das Thema, sondern dass Ihr Verkaufsprozess aktuell sehr stark an Ihrer Person hängt. Was müsste ein Mitarbeiter lernen oder bekommen, damit er Sie zumindest im Erstkontakt glaubwürdig entlasten kann?“\nPunkt 4: Der Authentizitätseinwand wurde unterschätzt\nSein Einwand war nicht nur:\n„Eine externe Firma soll nicht unter ihrem Namen anrufen.“\nSein Einwand war:\n„Mein Markt kennt mich. Der Erstkontakt muss persönlich und glaubwürdig sein.“\nDie Antwort „Wir rufen in Ihrem Namen an“ löst dieses Problem nicht.\nBesser:\n„Dann müsste der Prozess so aufgebaut sein, dass er sich in Sprache, Regionalität und Auftreten vollständig nach Ihrer Marke anfühlt. Wäre externe Unterstützung grundsätzlich denkbar, wenn der Erstkontakt trotzdem durch Ihren eigenen Mitarbeiter erfolgt?“\nPunkt 5: Der Pitch war sprachlich nicht markenkonform\nFormulierungen wie:\n„Attacke machen“,\n„alles weg terminieren“,\n„verkaufen, verkaufen, verkaufen“,\n„Umsatz in die Höhe treiben“\nwirken aggressiv und quantitativ.\nChristian positioniert sich dagegen über:\nKreativität,\nRegionalität,\nCommunity,\nContent,\npersönliche Betreuung,\nauthentische Kommunikation.\nDie Sprache des Callers bestätigte deshalb seine Sorge, dass HIPERSA nicht zu seiner Marke passt.", "questions": [{"q": "Was lebt laut Text besonders stark von Christian Hempflings regionalem Geschäftsmodell?", "answers": ["Anonyme Softwarelösungen.", "Persönliche Bekanntheit, regionales Vertrauen und Personenmarke.", "Hauptsächlich Online-Werbeanzeigen ohne persönlichen Kontakt."], "correct": 1}, {"q": "Was wurde beim Teamaufbau laut Analyse übersehen?", "answers": ["Dass er gar keine Mitarbeiter einstellen wollte.", "Dass er nur Vertriebler einstellen wollte.", "Dass er operative Kapazität aufbaut, die später ausgelastet werden muss."], "correct": 2}, {"q": "Warum war die Sprache des Callers nicht markenkonform?", "answers": ["Sie war zu technisch und nüchtern.", "Sie war aggressiv und quantitativ, während Christian auf Kreativität, Regionalität und authentische Kommunikation setzt.", "Sie war zu leise und unsicher."], "correct": 1}]}, {"title": "4. WAS IM CALL TECHNISCH UND KOMMUNIKATIV BESSER LAUFEN MUSSTE", "subtitle": "Vorbereitung, Gesprächsführung und Tonalität", "text": "Technische Vorbereitung\nVor dem Anruf hätten die Website und das LinkedIn-Profil stärker ausgewertet werden müssen.\nRelevante Anknüpfungspunkte waren:\nSocial-Media-Marketing,\nContent Creation,\nFoto und Video,\nGrafikdesign,\nWorkshops,\nCommunity,\nRecruiting,\nregionale Ausrichtung auf Hof und Umgebung,\nstarke Personenmarke.\nDer Pitch hätte diese Punkte konkret enthalten müssen.\nBeispiel:\n„Ich habe gesehen, dass Sie Unternehmen im Hofer Land nicht nur mit Social Media betreuen, sondern auch Content Days, Foto, Video und Workshops anbieten. Gerade bei einem so persönlichen Angebot ist die Frage spannend, wie man regional planbar neue Kunden gewinnt, ohne dass die Ansprache nach Callcenter klingt.“\nGesprächsführung\nDer Caller hat zu viel argumentiert und zu wenig gefragt.\nNach dem Calling-Warrior-Modell hätte nahezu jede Aussage des Leads in eine Frage umgewandelt werden können.\nBeispiel:\nLead:\n„Vertrieb ist gerade nicht relevant.“\nFrage:\n„Nicht relevant, weil aktuell genug Anfragen vorhanden sind oder weil der Teamaufbau gerade Vorrang hat?“\nLead:\n„Jemand anders tut sich beim Verkaufen schwer.“\nFrage:\n„Woran scheitert es bei anderen konkret – an der fachlichen Erklärung, an Ihrer persönlichen Bekanntheit oder am fehlenden Verkaufsprozess?“\nLead:\n„Es sollte jemand aus meinem Unternehmen anrufen.“\nFrage:\n„Muss diese Person zwingend bei Ihnen angestellt sein oder muss es sich für den Kunden lediglich vollständig nach Ihrem Unternehmen anfühlen?“\nTonalität und Wortwahl\nDie hohe Energie war grundsätzlich positiv. Sie war jedoch teilweise zu stark und zu „saleslastig“.\nBei Christian wäre eine ruhigere, beratende Tonalität sinnvoller gewesen:\nweniger Druck,\nmehr Verständnis,\npräzisere Fragen,\nweniger Superlative,\nweniger aggressive Bilder.\nDer Caller hätte sich als Prozessberater und nicht als Terminproduzent positionieren sollen.", "questions": [{"q": "Was hätte in der technischen Vorbereitung laut Text intensiver genutzt werden müssen?", "answers": ["Nur interne CRM-Notizen.", "Website und LinkedIn-Profil von Christian.", "Ausschließlich Telefonnotizen anderer Leads."], "correct": 1}, {"q": "Was ist das Hauptproblem der Gesprächsführung laut Analyse?", "answers": ["Zu wenig Smalltalk zu Beginn.", "Zu viele Rückfragen zur Technik.", "Der Caller hat zu viel argumentiert und zu wenig gefragt."], "correct": 2}, {"q": "Wie hätte die Tonalität beim Lead besser wirken sollen?", "answers": ["Aggressiver und druckvoller.", "Ruhiger, beratender, mit weniger Superlativen und aggressiven Bildern.", "Komplett monoton und neutral."], "correct": 1}]}, {"title": "5. WELCHE FRAGEN HÄTTEN GESTELLT WERDEN MÜSSEN?", "subtitle": "Fragen zu Status quo, Team, Personenabhängigkeit, Zielgruppe und Einwänden", "text": "Fragen zum Status quo\na) „Wie viele konkrete Kundenanfragen entstehen aktuell durchschnittlich pro Monat?“\nb) „Wie viele neue Kunden gewinnen Sie daraus normalerweise?“\nc) „Über welche Kanäle entstehen diese Kunden heute: Empfehlungen, regionale Bekanntheit, Social Media, Events oder aktive Ansprache?“\nd) „Wie viel Ihrer eigenen Zeit fließt aktuell in Verkauf und Kundengewinnung?“\ne) „Wie viele zusätzliche Kunden könnten Sie mit dem neuen Team pro Monat betreuen?“\nFragen zum Teamaufbau\na) „Welche Aufgaben soll der neue Mitarbeiter übernehmen: Content-Produktion, Kundenbetreuung oder auch aktive Kundengewinnung?“\nb) „Soll diese Person später auch Erstgespräche führen oder bleibt der Verkauf weiterhin bei Ihnen?“\nc) „Bis wann soll das neue Team vollständig einsatzfähig sein?“\nd) „Wie soll das Team ausgelastet werden, sobald die Kapazität vorhanden ist?“\nFragen zur Personenabhängigkeit\na) „Warum verkauft jemand anderes Ihre Leistung bisher schlechter als Sie?“\nb) „Fehlt den Mitarbeitern eher das Fachwissen, die regionale Bekanntheit oder eine klare Gesprächsstruktur?“\nc) „Wie stark möchten Sie persönlich künftig noch in jedem Verkaufsgespräch beteiligt sein?“\nd) „Was passiert mit dem Vertrieb, wenn Sie zwei oder drei Wochen nicht verfügbar sind?“\nFragen zur Zielgruppe\na) „Welche Unternehmen im Raum Hof und Bayreuth passen am besten zu Ihnen?“\nb) „Welche Branchen haben aktuell den größten Bedarf an Social Media und Content?“\nc) „Welches Angebot verkauft sich am leichtesten: laufende Betreuung, Content Days, Foto und Video, Workshops oder Recruiting-Content?“\nd) „Welche Kunden bringen Ihnen den höchsten langfristigen Wert?“\nFragen zur Einwandtrennung\na) „Lehnen Sie externe Unterstützung grundsätzlich ab oder nur eine Ansprache, die sich unpersönlich anfühlt?“\nb) „Wäre ein Modell denkbar, bei dem HIPERSA Zielkunden, CRM und Follow-up vorbereitet, aber Ihr Mitarbeiter selbst anruft?“\nc) „Ist das Thema aktuell nicht relevant, weil genug Kunden vorhanden sind, oder weil Sie erst die interne Struktur fertigstellen möchten?“\nd) „Wenn der Prozess vollständig auf Ihre Region und Tonalität zugeschnitten wäre, wäre das Thema grundsätzlich interessant?“", "questions": [{"q": "Welches Ziel haben die Fragen zum Status quo in erster Linie?", "answers": ["Nur die Länge des Gesprächs zu erhöhen.", "Konkrete Zahlen und Kanäle der aktuellen Kundengewinnung sichtbar zu machen.", "Nur zu prüfen, ob der Lead Social Media nutzt."], "correct": 1}, {"q": "Welcher Themenbereich wird explizit mit Fragen zur Personenabhängigkeit adressiert?", "answers": ["Ob die Mitarbeiter Kaffee mögen.", "Wie stark der Vertrieb von Christian als Person abhängt.", "Ob das Unternehmen international tätig ist."], "correct": 1}, {"q": "Was ist die Funktion der Fragen zur Einwandtrennung?", "answers": ["Einwände zu überhören.", "Einwände in Smalltalk aufzulösen.", "Zu klären, ob externe Unterstützung grundsätzlich abgelehnt wird oder nur bestimmte Formen unpersönlicher Ansprache."], "correct": 2}]}, {"title": "6. WAS WURDE INHALTLICH VERGESSEN?", "subtitle": "Teamaufbau, hybride Modelle, Übertragbarkeit und regionaler Vorteil", "text": "Der Zusammenhang zwischen Teamaufbau und Auslastung\nDer wichtigste vergessene Zusammenhang war:\nMehr Mitarbeiter bedeuten höhere Kapazität und höhere laufende Kosten. Diese Kapazität muss mit passenden Kunden ausgelastet werden.\nPassende Formulierung:\n„Wenn Sie jetzt zusätzliche Mitarbeiter aufbauen, ist die entscheidende Frage nicht nur, wer den Content produziert, sondern wie diese Kapazität später planbar mit Kundenprojekten ausgelastet wird.“\nEine hybride Lösung\nEs wurde ausschließlich Done-for-you-Cold-Calling angeboten.\nFür Christian wäre wahrscheinlich ein hybrides Modell geeigneter:\nHIPERSA definiert Zielkunden.\nHIPERSA erstellt Listen und Segmente.\nHIPERSA entwickelt Skripte in seiner Tonalität.\nHIPERSA baut CRM und Follow-up auf.\nSein interner Mitarbeiter übernimmt die persönliche Ansprache.\nHIPERSA analysiert und optimiert die Ergebnisse.\nDamit wäre seine regionale Authentizität erhalten geblieben.\nDie systematische Übertragung seiner Verkaufsfähigkeit\nChristian sagte, dass er selbst gut verkauft, andere aber Schwierigkeiten haben.\nGenau hier hätte HIPERSA ansetzen können:\nGesprächsleitfäden,\nEinwandbehandlung,\nQualifizierung,\nRoleplays,\nCall-Auswertungen,\nÜbergabeprozesse,\nDokumentation seines persönlichen Verkaufsstils.\nNicht nur Termine, sondern die Reproduzierbarkeit seines Vertriebs wäre ein relevanter Hebel gewesen.\nDer regionale Fokus als Vorteil\nDer Caller behandelte die regionale Begrenzung eher wie ein Problem.\nSie hätte als Vorteil positioniert werden können:\nüberschaubare Zielkundenmenge,\nklare Branchencluster,\nstarke lokale Referenzen,\nregionale Inhalte,\npräzise Events und Netzwerke,\npersönlichere Ansprache,\nschnellere Vertrauensbildung.\nPassende Formulierung:\n„Gerade weil Ihre Region klar begrenzt ist, kann man sehr präzise festlegen, welche Unternehmen wirklich zu Ihnen passen und wie sie angesprochen werden müssen.“", "questions": [{"q": "Welcher Zusammenhang wurde laut Text besonders übersehen?", "answers": ["Mehr Mitarbeiter führen automatisch zu weniger Arbeit.", "Mehr Mitarbeiter bedeuten höhere Kapazität, die planbar ausgelastet werden muss.", "Mehr Mitarbeiter lösen alle Vertriebsprobleme von selbst."], "correct": 1}, {"q": "Was kennzeichnet das vorgeschlagene hybride Modell?", "answers": ["Nur interne Anrufe ohne Unterstützung.", "Nur externe Cold Calls ohne interne Beteiligung.", "HIPERSA bereitet Zielkunden, Skripte und CRM vor, der interne Mitarbeiter übernimmt die persönliche Ansprache."], "correct": 2}, {"q": "Wie hätte der regionale Fokus laut Analyse genutzt werden sollen?", "answers": ["Als Nachteil, der Expansion verhindert.", "Als Vorteil mit klarer Zielkundenmenge, lokalen Referenzen und persönlicherer Ansprache.", "Gar nicht, weil Region keine Rolle spielt."], "correct": 1}]}, {"title": "7. NICHT BEHANDELTE EINWÄNDE UND HINGENOMMENE VORWÄNDE", "subtitle": "Typische Einwände und passende Einwandtrennung", "text": "„Das ist gerade nicht relevant“\nDieser Einwand wurde nicht getrennt.\nNotwendige Frage:\n„Nicht relevant, weil Sie aktuell ausreichend Kunden haben, oder weil der Aufbau Ihres Teams gerade höhere Priorität hat?“\nMögliche Konsequenz:\nWenn Teamaufbau der Grund ist, kann Vertrieb parallel vorbereitet werden.\n„Ich baue gerade jemanden intern auf“\nDieser Einwand wurde als Gegenargument gegen HIPERSA akzeptiert.\nDabei war unklar:\nWelche Rolle wird aufgebaut?\nSoll die Person überhaupt akquirieren?\nHat sie Vertriebserfahrung?\nWer erstellt Prozesse und Skripte?\nWer trainiert diese Person?\nWie wird ihre Leistung gemessen?\nPassende Trennung:\n„Soll die Person primär Content erstellen und Kunden betreuen oder auch aktiv neue Unternehmen ansprechen?“\n„Mein Unternehmen ist stark auf mich aufgebaut“\nDas ist gleichzeitig ein Painpoint und kein Grund gegen einen Termin.\nPassende Frage:\n„Möchten Sie, dass diese Abhängigkeit langfristig bestehen bleibt, oder wäre es sinnvoll, Ihren Verkaufsprozess so zu dokumentieren, dass andere zumindest Teile davon übernehmen können?“\n„Bei mir muss jemand aus der Firma anrufen“\nDer Einwand wurde nur oberflächlich behandelt.\nPassende Trennung:\n„Geht es Ihnen darum, dass die Person rechtlich bei Ihnen angestellt sein muss, oder darum, dass Sprache, Auftreten und regionale Kenntnis vollständig zu Ihrer Firma passen?“\n„Bei deutschlandweiter Expansion wäre es interessant“\nDieser Vorwand wurde zu schnell akzeptiert.\nPassende Antwort:\n„Warum müsste der Prozess deutschlandweit sein? Gerade regional ist die Zielgruppe doch klarer begrenzt und kann wesentlich persönlicher angesprochen werden.“\nDanach:\n„Ist die Region wirklich das Hindernis oder eher Ihre Sorge, dass externe Ansprache unpersönlich wirkt?“\n„Tatsächlich sehe ich das gerade nicht“\nDas war die letzte pauschale Abwehr und hätte noch einmal aufgetrennt werden müssen:\n„Was genau sehen Sie nicht: den Nutzen eines planbaren Prozesses oder die konkrete Umsetzung durch einen externen Anbieter?“", "questions": [{"q": "Was ist die zentrale Aufgabe bei „Das ist gerade nicht relevant“?", "answers": ["Einfach zum nächsten Lead springen.", "Mit einer Rabattaktion dagegenhalten.", "Zu klären, ob genug Kunden vorhanden sind oder der Teamaufbau Priorität hat."], "correct": 2}, {"q": "Was zeigt der Einwand „Mein Unternehmen ist stark auf mich aufgebaut“ vor allem?", "answers": ["Einen klaren Grund gegen jeden Termin.", "Einen Painpoint der starken Personenabhängigkeit.", "Eine rein rechtliche Fragestellung."], "correct": 1}, {"q": "Wie hätte der Vorwand zur deutschlandweiten Expansion besser behandelt werden können?", "answers": ["Direkt akzeptieren und das Thema beenden.", "Betonen, dass nur nationale Projekte sinnvoll sind.", "Nachfragen, ob wirklich die Region das Hindernis ist oder die Sorge vor unpersönlicher externer Ansprache."], "correct": 2}]}, {"title": "8. WARUM DER LEAD DEN TERMIN NICHT GENOMMEN HAT", "subtitle": "Selbstbild, Geschäftsmodell und wahrgenommener Nutzen", "text": "Der Lead hat den Termin nicht genommen, weil der angebotene Lösungsansatz nicht zu seinem Selbstbild und Geschäftsmodell passte.\nEr sah sich als:\nregionale Personenmarke,\nbekannter Ansprechpartner,\npersönlicher Dienstleister,\nkreativer Unternehmer,\nlokaler Netzwerkpartner.\nHIPERSA wurde im Call dagegen dargestellt als:\nexterne Telefonmannschaft,\nquantitativ arbeitender Terminlieferant,\naggressiver Outbound-Anbieter,\ndeutschlandweit skalierbares Callcenter-Modell.\nSein eigentliches Problem war nicht zwingend ein Mangel an Kundenkontakten, sondern:\ndie starke Abhängigkeit von seiner Person,\ndie Übertragbarkeit seines Verkaufsstils,\nder parallele Aufbau eines Teams,\ndie spätere Auslastung der neuen Mitarbeiter,\ndie Wahrung regionaler Authentizität.\nDiese Themen wurden nicht in einen passenden Soll-Zustand übersetzt.\nDer Termin hatte deshalb aus seiner Sicht keinen konkreten Nutzen. Er erwartete wahrscheinlich lediglich eine Präsentation darüber, wie HIPERSA externe Kaltakquise in seinem Namen betreibt.\nDer Termin hätte relevant gewirkt, wenn er als Strategiegespräch zu folgender Frage angeboten worden wäre:\n„Wie kann Christian.Hempfling.Media im Umkreis Hof und Bayreuth planbar passende Unternehmen gewinnen, ohne dass der Erstkontakt unpersönlich wirkt und ohne dass weiterhin alles von Christian Hempfling selbst abhängt?“", "questions": [{"q": "Wie sieht sich Christian laut Analyse in seinem Selbstbild?", "answers": ["Als anonymer Online-Anbieter ohne regionale Bindung.", "Als regionale Personenmarke, persönlicher Dienstleister und lokaler Netzwerkpartner.", "Als rein digitaler Kursanbieter ohne direkten Kundenkontakt."], "correct": 1}, {"q": "Wie wurde HIPERSA im Call aus Sicht des Leads dargestellt?", "answers": ["Als rein beratendes Coachingunternehmen.", "Als lokaler Boutique-Dienstleister.", "Als externe Telefonmannschaft und aggressiver, skalierbarer Outbound-Anbieter."], "correct": 2}, {"q": "Welche Frage hätte den Termin als Strategiegespräch relevant machen können?", "answers": ["Wie können wir so viele Termine wie möglich deutschlandweit legen?", "Wie kann Christian.Hempfling.Media regional planbar passende Unternehmen gewinnen, ohne persönliche und regionale Wirkung zu verlieren?", "Wie kann HIPERSA möglichst viele Cold Calls pro Tag durchführen?"], "correct": 1}]}, {"title": "9. WAS IN DER ABBRUCHPHASE HÄTTE GESAGT WERDEN KÖNNEN?", "subtitle": "Umgang mit „Tatsächlich sehe ich das gerade nicht“", "text": "Als Christian sagte:\n„Tatsächlich sehe ich das gerade nicht.“\nhätte der Caller nicht sofort zurückweichen sollen.\nEine passende Reaktion wäre gewesen:\n„Verstehe ich, Herr Hempfling. Nur damit ich Sie richtig einordne: Sehen Sie grundsätzlich keinen Bedarf an einem planbaren regionalen Akquiseprozess oder war mein Vorschlag gerade noch zu stark auf externe Telefonakquise ausgerichtet?“\nWenn Christian sagt, dass es zu sehr nach externer Telefonakquise klingt:\n„Dann bin ich vollkommen bei Ihnen. Ein klassisches Callcenter-Modell wäre bei Ihrer regionalen Personenmarke vermutlich auch der falsche Ansatz.“\n„Spannender wäre eher, dass wir Zielkunden, Gesprächsstruktur, CRM und Follow-up aufsetzen und Ihr eigener Mitarbeiter die persönliche Ansprache übernimmt. Damit bleibt der Kontakt in Ihrem Unternehmen und Sie müssen den Prozess trotzdem nicht komplett allein entwickeln.“\nDanach:\n„Wäre so ein hybrider Ansatz grundsätzlich interessanter oder möchten Sie das Thema Kundengewinnung aktuell vollständig zurückstellen?“\nWenn grundsätzlich interessant:\n„Dann lassen Sie uns dazu 20 Minuten nehmen und ausschließlich prüfen, wie ein regionaler Prozess aussehen könnte, der sich nach Christian.Hempfling.Media anfühlt und Ihr neues Team später auslastet. Passt Ihnen Dienstag oder Donnerstag besser?“\nAlternativ mit stärkerer Einwandtrennung:\n„Nur mal angenommen, die Ansprache käme von Ihrem eigenen Mitarbeiter, würde vollständig Ihre Tonalität treffen und HIPERSA würde im Hintergrund lediglich Struktur, Zielkunden und Nachverfolgung liefern: Wäre es dann immer noch uninteressant?“\nDamit hätte der Lead klar sagen müssen, ob:\ndas Modell das Problem ist,\ndas Timing das Problem ist,\ngrundsätzlich kein Wachstumswunsch besteht.", "questions": [{"q": "Wie hätte der Caller auf „Tatsächlich sehe ich das gerade nicht“ reagieren sollen?", "answers": ["Sofort das Gespräch beenden.", "Mit einer klaren Einordnungsfrage nach Bedarf und Ausrichtung des Vorschlags.", "Den Lead direkt zu einem anderen Produkt pitchen."], "correct": 1}, {"q": "Was ist die Idee hinter dem vorgeschlagenen hybriden Ansatz in der Abbruchphase?", "answers": ["HIPERSA übernimmt komplett alles, ohne internen Kontakt.", "Zielkunden, Struktur, CRM und Follow-up kommen von HIPERSA, die persönliche Ansprache vom eigenen Mitarbeiter.", "Nur E-Mail-Kommunikation ohne Telefonate."], "correct": 1}, {"q": "Welches Ziel hat die Formulierung „Nur mal angenommen … wäre es dann immer noch uninteressant?“", "answers": ["Den Lead zu verwirren.", "Zu klären, ob das Modell, das Timing oder der Wachstumswunsch das eigentliche Problem ist.", "Eine sofortige Kaufzusage zu erzwingen."], "correct": 1}]}, {"title": "10. DREI KONKRETE HINWEISE FÜR DEN FOLLOW-UP-CALL", "subtitle": "Fehlerkorrektur, Teamaufbau verknüpfen, Termin reframen", "text": "Hinweis 1: Den Fehler im ersten Gespräch offen korrigieren\nEinstieg:\n„Hallo Herr Hempfling, Max Pilgrim von HIPERSA. Wir hatten vor einiger Zeit über Kundengewinnung gesprochen. Ich glaube, ich habe Sie damals zu stark in Richtung externer Telefonakquise abgeholt. Ihr wichtiger Punkt war ja, dass Ihre regionale Personenmarke und der persönliche Kontakt erhalten bleiben müssen.“\nDas zeigt:\naktives Zuhören,\nSelbstreflexion,\nindividuelle Vorbereitung,\nRespekt vor seinem Einwand.\nDanach:\n„Genau dazu ist mir ein anderer Ansatz eingefallen, den ich damals nicht sauber dargestellt habe.“\nHinweis 2: Den Teamaufbau mit planbarer Auslastung verbinden\nFrage:\n„Sie hatten gesagt, dass Sie Mitarbeiter für Content Creation und Social-Media-Betreuung aufbauen. Wie weit ist dieser Aufbau inzwischen?“\nDanach:\n„Und wie soll die zusätzliche Kapazität künftig planbar ausgelastet werden – hauptsächlich über bestehende Nachfrage und Empfehlungen oder soll parallel ein strukturierter regionaler Prozess entstehen?“\nWenn noch kein Prozess vorhanden ist:\n„Dann wäre genau das der Ansatzpunkt: nicht irgendein externer Caller, sondern ein Prozess, mit dem Ihr eigener Mitarbeiter regional passende Unternehmen anspricht und systematisch nachfasst.“\nHinweis 3: Den Termin vollständig neu framen\nNicht sagen:\n„Ich möchte Ihnen unser Produkt vorstellen.“\nBesser:\n„Ich möchte mit Ihnen nicht über ein Callcenter-Modell sprechen. Der Termin hätte nur eine konkrete Frage: Wie kann Christian.Hempfling.Media im Umkreis Hof und Bayreuth planbar passende Unternehmen gewinnen, ohne die persönliche und regionale Wirkung zu verlieren?“\nDann:\n„Nur mal angenommen, wir könnten Zielkunden, Skript, CRM und Follow-up vorbereiten und Ihr eigener Mitarbeiter übernimmt die persönliche Ansprache: Wäre es sinnvoll, sich diesen Ansatz einmal 20 Minuten anzuschauen?“\nBei Zustimmung:\n„Passt Ihnen dafür Dienstag oder Donnerstag besser?“\nAbschlussfrage zur Einwandtrennung:\n„Oder sagen Sie, selbst wenn der Prozess intern und in Ihrer Tonalität durchgeführt wird, möchten Sie aktuell grundsätzlich keine zusätzlichen Kunden gewinnen?“\nDamit wird aus einem allgemeinen Vorwand eine klare geschäftliche Entscheidung.", "questions": [{"q": "Was zeigt der Einstieg im Follow-up mit der offenen Fehlerkorrektur besonders?", "answers": ["Überlegenheit gegenüber dem Lead.", "Aktives Zuhören, Selbstreflexion und Respekt vor seinem Einwand.", "Dass bisher nichts aus dem ersten Gespräch gelernt wurde."], "correct": 1}, {"q": "Worum dreht sich der zweite Hinweis im Follow-up vor allem?", "answers": ["Nur um reine Produktfeatures.", "Um die Verbindung von Teamaufbau mit planbarer Auslastung über einen regionalen Prozess.", "Um Preisverhandlungen."], "correct": 1}, {"q": "Wie soll der Termin laut drittem Hinweis im Follow-up gerahmt werden?", "answers": ["Als Produktpräsentation mit Fokus auf HIPERSA.", "Als generische Demo ohne Bezug zu Hof und Bayreuth.", "Als Strategiegespräch zur Frage, wie regional passende Unternehmen gewonnen werden, ohne persönliche und regionale Wirkung zu verlieren."], "correct": 2}]}];
+
+const navEl = document.getElementById("nav");
+const sectionsEl = document.getElementById("sections");
+const fillEl = document.getElementById("fill");
+const progressLabel = document.getElementById("progressLabel");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+const stickyHint = document.getElementById("stickyHint");
+
+const completed = new Set();
+const answeredCount = sectionsData.map(() => 0);
+let currentIndex = 0;
+
+// Build nav
+sectionsData.forEach((s, idx) => {
+  const btn = document.createElement("button");
+  btn.dataset.idx = idx;
+  btn.innerHTML = '<span class="num">' + (idx + 1) + '</span><span class="label">' + escapeHtml(shortTitle(s.title)) + '</span>';
+  btn.addEventListener("click", () => renderSection(idx));
+  navEl.appendChild(btn);
+});
+
+// Build sections
+sectionsData.forEach((s, idx) => {
+  const section = document.createElement("section");
+  section.className = "section";
+  let qHtml = "";
+  s.questions.forEach((q, qi) => {
+    let choicesHtml = "";
+    q.answers.forEach((ans, ai) => {
+      choicesHtml += '<button class="choice" data-index="' + ai + '"><span class="mark"></span><span>' + escapeHtml(ans) + '</span></button>';
+    });
+    qHtml += '<div class="question" data-section="' + idx + '" data-question="' + qi + '" data-correct="' + q.correct + '">'
+           + '<h4>' + (qi + 1) + '. ' + escapeHtml(q.q) + '</h4>'
+           + '<div class="choices">' + choicesHtml + '</div>'
+           + '<div class="feedback"></div></div>';
+  });
+  section.innerHTML =
+    '<div class="card">'
+    + '<h3>' + escapeHtml(s.title) + '</h3>'
+    + '<p class="subtitle">' + escapeHtml(s.subtitle) + '</p>'
+    + '<div class="text">' + escapeHtml(s.text) + '</div>'
+    + '<div class="mc"><div class="mc-head">Verstaendnis pruefen - 3 Fragen</div>' + qHtml + '</div>'
+    + '<div class="actions">'
+    + '<span class="q-status" data-status="' + idx + '">0 / 3 Fragen beantwortet</span>'
+    + '<button class="btn primary complete-btn" data-step="' + idx + '" disabled>Abschnitt abschliessen</button>'
+    + '</div></div>';
+  sectionsEl.appendChild(section);
+});
+
+const sectionNodes = Array.from(document.querySelectorAll(".section"));
+const navButtons = Array.from(document.querySelectorAll(".nav button"));
+
+// MC logic
+document.querySelectorAll(".question").forEach((qEl) => {
+  const correct = parseInt(qEl.dataset.correct, 10);
+  const sIdx = parseInt(qEl.dataset.section, 10);
+  const choices = Array.from(qEl.querySelectorAll(".choice"));
+  const feedback = qEl.querySelector(".feedback");
+  choices.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (qEl.dataset.done === "1") return;
+      const idx = parseInt(btn.dataset.index, 10);
+      choices.forEach((c) => c.classList.add("locked"));
+      btn.classList.add("selected");
+      choices[correct].classList.add("correct");
+      choices[correct].querySelector(".mark").textContent = "\u2713";
+      if (idx !== correct) {
+        btn.classList.add("wrong");
+        btn.querySelector(".mark").textContent = "\u2715";
+      }
+      const isCorrect = idx === correct;
+      feedback.textContent = isCorrect
+        ? "Richtig - das entspricht der Abhandlung."
+        : "Nicht ganz - die gruen markierte Antwort passt zur Abhandlung.";
+      feedback.className = "feedback show " + (isCorrect ? "good" : "bad");
+      qEl.dataset.done = "1";
+      answeredCount[sIdx]++;
+      updateSectionStatus(sIdx);
+    });
+  });
+});
+
+function updateSectionStatus(sIdx) {
+  const total = sectionsData[sIdx].questions.length;
+  const done = answeredCount[sIdx];
+  const statusEl = document.querySelector('[data-status="' + sIdx + '"]');
+  if (statusEl) statusEl.textContent = done + " / " + total + " Fragen beantwortet";
+  const completeBtn = document.querySelector('.complete-btn[data-step="' + sIdx + '"]');
+  if (completeBtn) completeBtn.disabled = done < total;
+}
+
+// Complete section
+document.querySelectorAll(".complete-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const step = parseInt(btn.dataset.step, 10);
+    completed.add(step);
+    navButtons[step].classList.add("done");
+    updateProgress();
+    if (step < sectionNodes.length - 1) {
+      renderSection(step + 1);
+    } else {
+      renderSection(step);
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+    }
+  });
+});
+
+function renderSection(index) {
+  currentIndex = Math.max(0, Math.min(index, sectionNodes.length - 1));
+  sectionNodes.forEach((sec, i) => sec.classList.toggle("active", i === currentIndex));
+  navButtons.forEach((btn, i) => btn.classList.toggle("active", i === currentIndex));
+  prevBtn.disabled = currentIndex === 0;
+  nextBtn.textContent = currentIndex === sectionNodes.length - 1 ? "Zum Anfang" : "Naechster Abschnitt";
+  stickyHint.textContent = "Abschnitt " + (currentIndex + 1) + " von " + sectionNodes.length;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function updateProgress() {
+  const total = sectionsData.length;
+  const count = completed.size;
+  fillEl.style.width = ((count / total) * 100) + "%";
+  progressLabel.textContent = count + " / " + total + " Abschnitte abgeschlossen";
+}
+
+prevBtn.addEventListener("click", () => renderSection(currentIndex - 1));
+nextBtn.addEventListener("click", () => {
+  if (currentIndex === sectionNodes.length - 1) renderSection(0);
+  else renderSection(currentIndex + 1);
+});
+
+function shortTitle(t) {
+  // strip leading number, cut to a short label
+  let s = t.replace(/^\d+\.\s*/, "");
+  if (s.length > 34) s = s.slice(0, 32).trim() + "...";
+  return s.charAt(0) + s.slice(1).toLowerCase();
+}
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+renderSection(0);
+updateProgress();
+</script>
+</body>
+</html>
